@@ -1,0 +1,73 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../elements/element-style.html">
+<link rel="import" href="../elements/element-song.html">
+<link rel="import" href="../elements/element-menu.html">
+
+<link rel="import" href="../data/d-music-data.html">
+
+<dom-module id="disc-playlist">
+<template>
+  <style include="element-style"></style>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <d-music-data
+    id="musicdata"
+    music-data="{{music}}"
+    music-nums="{{musicNums}}"
+    playlist="{{playlist}}"></d-music-data>
+
+  <div>
+    <template is="dom-repeat" items="{{ currentMusic }}" index-as=index>
+      <element-song title="[[ item.name ]]" music-index="[[ index ]]" on-click="playMusic">
+        <element-menu>
+          <div class="icon" slot="toggle">more_vert</div>
+          <div class="item">Delete</div>
+        </element-menu>
+      </element-song>
+    </template>
+  </div>
+</template>
+<script>
+  class DiscPlaylist extends Polymer.Element {
+    static get is () { return 'disc-playlist' }
+    static get properties () {
+      return {
+        currentPlaylist: Object,
+        currentMusic: {
+          type: Array,
+          value: []
+        }
+      }
+    }
+
+    static get observers () {
+      return [
+        'checkPlaylist(play, playlist, music)'
+      ]
+    }
+
+    playMusic (evt) {
+      this.$.musicdata.loadNewSong(this.music[evt.target.musicIndex])
+      window.dispatchEvent(new CustomEvent('music-player', {detail: {music: this.music[evt.target.musicIndex]}}))
+    }
+
+    checkPlaylist (play, playlist, music) {
+      if (play && playlist && music) {
+        if (play === 'all') {
+          this.currentMusic = music
+        } else {
+          this.currentPlaylist = playlist[playlist.findIndex(p => p.name === play)]
+          let musics = this.currentPlaylist.musics.map(m => music[music.findIndex(mu => m === mu.key)])
+          this.currentMusic = musics
+        }
+      }
+    }
+    
+  }
+  window.customElements.define(DiscPlaylist.is, DiscPlaylist)
+</script>
+</dom-module>
