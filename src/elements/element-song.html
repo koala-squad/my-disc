@@ -1,0 +1,66 @@
+<link rel='import' href='element-style.html'>
+
+<dom-module id='element-song'>
+  <template>
+    <style include='element-style'></style>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .list {
+        display: flex;
+        align-items: center;
+        padding: 24px;
+        border-top: 2px solid var(--color-dark-primary);
+        transition: background-color 0.2s ease-in-out;
+        cursor: pointer;
+      }
+
+      .list:hover {
+        background-color: var(--color-dark-primary);
+      }
+
+      .title {
+        flex-grow: 1;
+        font-size: 20px;
+      }
+
+      .icon {
+        display: none;
+        margin-right: 16px;
+        color: var(--color-accent);
+      }
+
+      .icon[visible] {
+        display: block;
+      }
+    </style>
+
+    <div class='list'>
+      <div class='title'>[[title]]</div>
+      <div class='icon' visible$='[[playing]]'>play_arrow</div>
+      <slot></slot>
+    </div>
+  </template>
+
+  <script>
+    class ElementSong extends Polymer.Element {
+
+      static get is() {
+        return 'element-song';
+      }
+
+      static get properties() {
+        return {
+          title: String,
+          playing: {
+            type: Boolean,
+            value: false
+          }
+        };
+      }
+    }
+    window.customElements.define(ElementSong.is, ElementSong);
+  </script>
+</dom-module>

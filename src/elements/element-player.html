@@ -1,0 +1,181 @@
+<link rel='import' href='element-style.html'>
+
+<dom-module id='element-player'>
+  <template>
+    <style include='element-style'></style>
+    <style>
+      .player {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        padding: 24px;
+        border-top: 4px solid var(--color-dark-primary);
+        transform: translateY(100%);
+        transition: transform 0.2s ease-in-out;
+        will-change: transform;
+      }
+
+      .player[visible] {
+        transform: translateY(0);
+      }
+
+      .canvas {
+        display: block;
+        cursor: pointer;
+      }
+
+      .title {
+        flex-grow: 1;
+        margin-left: 16px;
+        font-size: 20px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        user-select: none;
+      }
+
+      .icon {
+        margin-left: 16px;
+        cursor: pointer;
+      }
+
+      @media all and (max-width: 600px) {
+        .player {
+          padding: 16px;
+        }
+      }
+    </style>
+
+    <div class='player' visible$='[[visible]]'>
+      <canvas class='canvas' width='48' height='48' id='canvas'></canvas>
+      <div class='title'>[[title]]</div>
+      <div class='icon' on-click='previous'>skip_previous</div>
+      <div class='icon' on-click='toggle'>[[icon(paused)]]</div>
+      <div class='icon' on-click='next'>skip_next</div>
+      <audio src='[[src]]' id='audio'></audio>
+    </div>
+  </template>
+
+  <script>
+    class ElementPlayer extends Polymer.Element {
+
+      static get is() {
+        return 'element-player';
+      }
+
+      static get properties() {
+        return {
+          title: String,
+          src: String,
+          visible: {
+            type: Boolean,
+            value: false
+          },
+          paused: {
+            type: Boolean,
+            value: false
+          }
+        };
+      }
+
+      icon(paused) {
+        return this.paused ? 'play_arrow' : 'pause';
+      }
+
+      toggle() {
+        let audio = this.$.audio;
+        audio.paused ? audio.play() : audio.pause();
+        this.paused = audio.paused;
+      }
+
+      previous() {
+        this.dispatchEvent(new CustomEvent('previous'));
+      }
+
+      next() {
+        this.dispatchEvent(new CustomEvent('next'));
+      }
+
+      draw(ctx, x, y, r, a) {
+        let canvas = this.$.canvas;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.arc(x, y, r, -Math.PI / 2, a - Math.PI / 2);
+        ctx.stroke();
+      };
+
+      ready() {
+        super.ready();
+
+        let canvas = this.$.canvas;
+        let audio = this.$.audio;
+        let ctx = canvas.getContext('2d');
+        let cx = canvas.width / 2;
+        let cy = canvas.height / 2;
+        let radius = canvas.width / 2 - 4;
+        let rect = null;
+
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#1abc9c';
+
+        const down = () => {
+          rect = canvas.getBoundingClientRect();
+        }
+
+        const up = () => {
+          rect = null;
+        }
+
+        const move = (px, py) => {
+          if (!rect) return;
+          let x = px - rect.left;
+          let y = py - rect.top;
+          let a = Math.atan2(x - cx, cy - y);
+          if (a < 0) a += 2 * Math.PI;
+          audio.currentTime = audio.duration / 2 / Math.PI * a;
+          this.draw(ctx, cx, cy, radius, a);
+        }
+
+        canvas.addEventListener('mousedown', down);
+        canvas.addEventListener('mouseup', up);
+        canvas.addEventListener('mouseleave', up);
+        canvas.addEventListener('touchstart', down);
+        canvas.addEventListener('touchend', up);
+
+        canvas.addEventListener('mousemove', (event) => {
+          move(event.pageX, event.pageY);
+        });
+
+        canvas.addEventListener('touchmove', (event) => {
+          move(event.touches[0].pageX, event.touches[0].pageY);
+        });
+
+        audio.addEventListener('timeupdate', () => {
+          let a = 2 * Math.PI / audio.duration * audio.currentTime;
+          this.draw(ctx, cx, cy, radius, a);
+        });
+
+        audio.addEventListener('ended', () => {
+          this.next();
+        });
+      }
+
+      play() {
+        this.$.audio.play();
+        this.visible = true;
+        this.paused = false;
+      }
+
+      stop() {
+        this.$.audio.pause();
+        this.$.audio.currentTime = 0;
+        this.visible = false;
+      }
+    }
+    window.customElements.define(ElementPlayer.is, ElementPlayer);
+  </script>
+</dom-module>
