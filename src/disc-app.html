@@ -4,10 +4,18 @@
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 
+<link rel="import" href="elements/element-upload.html">
+<link rel="import" href="elements/element-style.html">
+<link rel="import" href="elements/element-player.html">
+
 <link rel="import" href="page/disc-home.html">
+<link rel="import" href="page/disc-playlist.html">
+
+<link rel="import" href="data/d-music-data.html">
 
 <dom-module id="disc-app">
 <template>
+  <style include="element-style"></style>
   <style>
     :host {
       display: block;
@@ -28,9 +36,17 @@
     messaging-sender-id="329216863306">
   </firebase-app>
 
+  <d-music-data 
+      id="musicdata"></d-music-data>
+
+  <element-upload on-submit="uploadMusic"></element-upload>
+  
   <iron-pages attr-for-selected="name" selected="[[page]]">
     <disc-home name="home"></disc-home>
+    <disc-playlist name="playlist" play="[[data.page]]"></disc-playlist>
   </iron-pages>
+
+  <element-player id="player" src="" title=""></element-player>
 </template>
 <script>
   class DiscApp extends Polymer.Element {
@@ -44,6 +60,15 @@
       }
     }
 
+    uploadMusic (evt) {
+      this.$.musicdata.uploadMusic(evt.detail)
+    }
+
+    connectedCallback () {
+      super.connectedCallback()
+      window.addEventListener('music-player', this.playMusic.bind(this))
+    }
+
     static get observers () {
       return [
         'changeRoute(data.page)'
@@ -51,7 +76,13 @@
     }
 
     changeRoute (page) {
-      this.page = page || 'home'
+      this.page = page ? 'playlist' : 'home'
+    }
+
+    playMusic (evt) {
+      this.$.player.src = evt.detail.music.music_blob ? URL.createObjectURL(evt.detail.music.music_blob) : evt.detail.music.link
+      this.$.player.title = evt.detail.music.name
+      this.$.player.play()
     }
   }
   window.customElements.define(DiscApp.is, DiscApp)

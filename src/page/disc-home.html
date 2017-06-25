@@ -1,13 +1,21 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../elements/element-style.html">
+<link rel="import" href="../elements/element-menu.html">
+<link rel="import" href="../elements/element-playlist.html">
+
 <link rel="import" href="../data/d-music-data.html">
 <link rel="import" href="../data/d-user-data.html">
 
 <dom-module id="disc-home">
 <template>
+  <style include="element-style"></style>
   <style>
     :host {
       display: block;
+    }
+    a {
+      color: inherit;
     }
   </style>
   <div>
@@ -21,46 +29,29 @@
       music-nums="{{musicNums}}"
       playlist="{{playlist}}"></d-music-data>
 
+    <a href="/all">
+      <element-playlist
+      title="เพลงทั้งหมด"
+      count="[[ musicNums ]]">
+        <element-menu>
+          <div class="icon" slot="toggle">more_vert</div>
+          <div class="item">Delete</div>
+        </element-menu>
+      </element-playlist>
+    </a>
 
-    <button on-click="signIn">Sign In</button>
-  
-    <div>มีจำนวน [[ musicNums ]] เพลง</div>
-    <input type="file" on-change="uploadMusic">
-    <template is="dom-repeat" items="{{music}}" index-as="music_index">
-      <div>
-        [[ item.name ]]
-        <div>[[ convertToMusic(item.music_blob, item.link) ]]</div>
-        <button on-click="loadNewSong" data-music$="{{ item }}">Load New Song</button>
-        <div>
-          Add To Playlist
-          <template is="dom-repeat" items={{playlist}} as="play">
-            <div>[[ play.name ]] 
-              <template is="dom-if" if="{{checkMusicInPlaylist(item.key, play)}}">
-                <button on-click="removeFromPlaylist" data-playlist$="{{ play.name }}" data-music-key$="{{ item.key }}">Added</button>
-              </template>
-              <template is="dom-if" if="{{!checkMusicInPlaylist(item.key, play)}}">
-                <button on-click="addToPlaylist" data-playlist$="{{ play.name }}" data-music-key$="{{ item.key }}">
-                  Add
-                </button>
-              </template>
-            </div>
-          </template>
-        </div>
-      </div>
+    <template is="dom-repeat" items="{{playlist}}">
+      <a href="/[[item.name]]">
+        <element-playlist
+        title="[[ item.name ]]"
+        count="[[ musicNums ]]">
+          <element-menu>
+            <div class="icon" slot="toggle">more_vert</div>
+            <div class="item">Delete</div>
+          </element-menu>
+        </element-playlist>
+      </a>
     </template>
-
-    <h3>Playlist</h3>
-    <input id="new_playlist" type="text">
-    <button on-click="createNewplaylist">add playlist</button>
-    <template is="dom-repeat" items={{playlist}} index-as=index>
-      <div>[[ item.name ]]</div>
-      <div>
-        <template is="dom-repeat" items={{item.musics}} as="music_index">
-          [[ music_index ]]
-        </template>
-      </div>
-    </template>
-    
   </div>
 </template>
 <script>
@@ -80,10 +71,6 @@
 
     createNewplaylist (evt) {
       this.$.musicdata.createNewplaylist(this.$.new_playlist.value)
-    }
-
-    uploadMusic (evt) {
-      this.$.musicdata.uploadMusic(evt)
     }
 
     convertToMusic (blob, link) {

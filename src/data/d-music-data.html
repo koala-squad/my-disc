@@ -153,15 +153,16 @@
     }
 
     uploadMusic (evt) {
-      let file = evt.target.files[0]
+      console.log(evt)
+      let file = evt.file
       if (file.type === 'audio/mp3') {
-        this.storageRef.child(`music/${file.name}`).put(file).then((snapshot) => {
+        this.storageRef.child(`music/${evt.title}`).put(file).then((snapshot) => {
           fetch(snapshot.downloadURL).then(response => {
             return response.blob()
           }).then(myBlob => {
             let newMusic = {
               key: snapshot.metadata.md5Hash,
-              name: file.name,
+              name: evt.title,
               link: snapshot.downloadURL,
               music_blob: myBlob
             }
