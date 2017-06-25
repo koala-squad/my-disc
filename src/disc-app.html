@@ -12,6 +12,7 @@
 <link rel="import" href="page/disc-playlist.html">
 
 <link rel="import" href="data/d-music-data.html">
+<link rel="import" href="data/d-user-data.html">
 
 <dom-module id="disc-app">
 <template>
@@ -19,6 +20,35 @@
   <style>
     :host {
       display: block;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      background-color: var(--color-dark-primary);
+    }
+
+    .title {
+      flex-grow: 1;
+      color: var(--color-accent);
+      font-size: 34px;
+    }
+
+    .signin {
+      padding: 8px;
+      color: var(--color-primary);
+      background-color: var(--color-accent);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 840px;
+      margin: auto;
+    }
+
+    .cover {
+      padding: 96px 0;
     }
   </style>
   <app-location route="{{route}}"></app-location>
@@ -36,15 +66,27 @@
     messaging-sender-id="329216863306">
   </firebase-app>
 
+  <d-user-data
+    id="userdata"
+    user="{{user}}"
+    ></d-user-data>
   <d-music-data 
-      id="musicdata"></d-music-data>
+    id="musicdata"></d-music-data>
 
-  <element-upload on-submit="uploadMusic"></element-upload>
+  <header class='toolbar'>
+    <div class='title'>My Disc</div>
+    <div class='signin'>Sign In</div>
+  </header>
   
-  <iron-pages attr-for-selected="name" selected="[[page]]">
-    <disc-home name="home"></disc-home>
-    <disc-playlist name="playlist" play="[[data.page]]"></disc-playlist>
-  </iron-pages>
+  <main class='container'>
+    <div class='cover'>
+      <element-upload on-submit="uploadMusic"></element-upload>
+    </div>
+    <iron-pages attr-for-selected="name" selected="[[page]]">
+      <disc-home name="home"></disc-home>
+      <disc-playlist name="playlist" play="[[data.page]]"></disc-playlist>
+    </iron-pages>
+  </main>
 
   <element-player id="player" src="" title=""></element-player>
 </template>

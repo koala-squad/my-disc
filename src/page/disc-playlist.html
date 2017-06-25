@@ -13,6 +13,16 @@
     :host {
       display: block;
     }
+    
+    .song {
+      display: block;
+      border-top: 2px solid var(--color-dark-primary);
+      color: inherit;
+    }
+
+    .song:first-of-type {
+      border-top: none;
+    }
   </style>
   <d-music-data
     id="musicdata"
@@ -22,7 +32,7 @@
 
   <div>
     <template is="dom-repeat" items="{{ currentMusic }}" index-as=index>
-      <element-song title="[[ item.name ]]" music-index="[[ index ]]" on-click="playMusic">
+      <element-song class='song' title="[[ item.name ]]" music-index="[[ index ]]" on-click="playMusic">
         <element-menu>
           <div class="icon" slot="toggle">more_vert</div>
           <div class="item">Delete</div>

@@ -1,0 +1,12 @@
+[
+  {
+    "origin": ["http://localhost:8081"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  },
+  {
+    "origin": ["https://my-disc-2a0ac.firebaseapp.com"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
