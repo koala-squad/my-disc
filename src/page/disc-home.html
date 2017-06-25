@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
 <link rel="import" href="../data/d-music-data.html">
+<link rel="import" href="../data/d-user-data.html">
 
 <dom-module id="disc-home">
 <template>
@@ -10,18 +11,26 @@
     }
   </style>
   <div>
+
+    <d-user-data
+      id="userdata"></d-user-data>
+
     <d-music-data 
       id="musicdata"
       music-data="{{music}}"
       music-nums="{{musicNums}}"
       playlist="{{playlist}}"></d-music-data>
+
+
+    <button on-click="signIn">Sign In</button>
   
     <div>มีจำนวน [[ musicNums ]] เพลง</div>
     <input type="file" on-change="uploadMusic">
     <template is="dom-repeat" items="{{music}}" index-as="music_index">
       <div>
         [[ item.name ]]
-        <video src="[[ convertToMusic(item.music_blob) ]]">URL</video>
+        <div>[[ convertToMusic(item.music_blob, item.link) ]]</div>
+        <button on-click="loadNewSong" data-music$="{{ item }}">Load New Song</button>
         <div>
           Add To Playlist
           <template is="dom-repeat" items={{playlist}} as="play">
@@ -41,6 +50,8 @@
     </template>
 
     <h3>Playlist</h3>
+    <input id="new_playlist" type="text">
+    <button on-click="createNewplaylist">add playlist</button>
     <template is="dom-repeat" items={{playlist}} index-as=index>
       <div>[[ item.name ]]</div>
       <div>
@@ -59,17 +70,29 @@
       return {}
     }
 
+    signIn (evt) {
+      this.$.userdata.signIn()
+    }
+
+    loadNewSong (evt) {
+      this.$.musicdata.loadNewSong(JSON.parse(evt.target.getAttribute('data-music')))
+    }
+
+    createNewplaylist (evt) {
+      this.$.musicdata.createNewplaylist(this.$.new_playlist.value)
+    }
+
     uploadMusic (evt) {
       this.$.musicdata.uploadMusic(evt)
     }
 
-    convertToMusic (blob) {
-      return URL.createObjectURL(blob)
+    convertToMusic (blob, link) {
+      return blob ? URL.createObjectURL(blob) : link
     }
 
     checkMusicInPlaylist (musicKey, playlist) {
       let { musics } = playlist
-      return musics.indexOf(musicKey) > -1
+      return musics ? musics.indexOf(musicKey) > -1 : false
     }
 
     addToPlaylist (evt) {

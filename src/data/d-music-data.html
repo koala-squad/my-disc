@@ -1,11 +1,21 @@
 <link rel="import" href="../../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html">
 <link rel="import" href="../../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-document.html">
 
 <dom-module id="d-music-data">
 <template>
+  <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError">
+  </firebase-auth>
+
+  <firebase-document
+    id="document"
+    path="/users/{{user.uid}}"
+    data="{{musicServer}}">
+  </firebase-document>
+
   <app-indexeddb-mirror
     key="music"
-    id="test_db"
     data="{{ music }}"
     persisted-data="{{ musicData }}"
   ></app-indexeddb-mirror>
@@ -25,6 +35,10 @@
     static get properties () {
       return {
         storageRef: Object,
+        user: {
+          type: Object,
+          observer: '_loadUser'
+        },
         playlist: {
           type: Array,
           notify: true
@@ -37,6 +51,10 @@
         musicData: {
           type: Array, 
           notify: true
+        },
+        musicServer: {
+          type: Array,
+          observer: '_loadMusicDataFromServer'
         },
         musicNums: {
           type: Number,
@@ -53,7 +71,46 @@
         isAuth: {
           type: Boolean,
           notify: true
+        },
+        isCache: {
+          type: Boolean,
+          value: false
         }
+      }
+    }
+
+    static get observers () {
+      return [
+        'syncPlaylist(isCache, playlist, user, isAuth, playlist.*)',
+        'syncMusic(isCache, music, user, isAuth, music.*)'
+      ]
+    }
+
+    syncPlaylist (isCache, playlist, user, isAuth, p) {
+      if (isCache && playlist && user && isAuth) {
+        let database = firebase.database()
+        if (playlist.length > 0) database.ref('users/' + this.user.uid + '/playlist').set(this.playlist)
+      }
+    }
+
+    syncMusic (isCache, music, user, isAuth, m) {
+      if (isCache && music && user && isAuth) {
+        let database = firebase.database()
+        if (music.length > 0) database.ref('users/' + this.user.uid + '/music').set(this.music)
+      }
+    }
+
+    _loadMusicDataFromServer (musicServer) {
+      if (!this.isCache) {
+        let { music, playlist } = musicServer
+        this.set('music', musicServer.music)
+        this.set('playlist', musicServer.playlist)
+      }
+    }
+
+    _loadUser (newUser) {
+      if (newUser) {
+        this.isAuth = true
       }
     }
 
@@ -74,15 +131,24 @@
       this.isAuth = window.localStorage["is-auth"] || false
       this.playlist = window.localStorage['playlist'] ? JSON.parse(window.localStorage['playlist']) : []
 
-      if(!this.isAuth || this.isAuth === 'false') {
-        let request = indexedDB.open('app-mirror')
-        request.onsuccess = () => {
-          let db = request.result
-          let musicKeyDB = db.transaction(["mirrored_data"]).objectStore("mirrored_data").get("music")
+      let request = indexedDB.open('app-mirror')
+      request.onsuccess = () => {
+        let db = request.result
+        if (db.objectStoreNames.length > 1) {
+          let musicKeyDB = db.transaction("mirrored_data").objectStore("mirrored_data").get("music")
           musicKeyDB.onsuccess = (evt) => {
             self.music = evt.target.result
+            self.isCache = true
           }
         }
+      }
+
+      request.onupgradeneeded = (evt) => {
+        evt.target.transaction.abort()
+      }
+      
+      if(this.isAuth || this.isAuth === 'true') {
+        console.log('User')
       }
     }
 
@@ -96,6 +162,7 @@
             let newMusic = {
               key: snapshot.metadata.md5Hash,
               name: file.name,
+              link: snapshot.downloadURL,
               music_blob: myBlob
             }
             if (this.music) {
@@ -107,7 +174,7 @@
       }
     }
 
-    createNewplaylist (musicKey, playlist) {
+    createNewplaylist (playlist) {
       this.push('playlist', {
         name: playlist,
         musics: []
@@ -127,7 +194,18 @@
       if (musics.indexOf(musicKey) > -1) {
         this.splice(`playlist.${choosePlaylist}.musics`, musics.indexOf(musicKey), 1)
       }
-      this.notifyPath(`playlist`)
+    }
+
+    loadNewSong (music) {
+      fetch(music.link).then(response => {
+        return response.blob()
+      }).then(myBlob => {
+        let chooseMusic = this.music.findIndex(m => m.key === music.key)
+        console.log(chooseMusic)
+        if (chooseMusic > -1) {
+          this.set(`music.${chooseMusic}.music_blob`, myBlob)
+        }
+      })
     }
   }
   window.customElements.define(DMusicData.is, DMusicData)
