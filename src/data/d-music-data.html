@@ -13,6 +13,9 @@
   <app-localstorage-document key="is-auth" data="{{isAuth}}">
   </app-localstorage-document>
 
+  <app-localstorage-document key="playlist" data="{{playlist}}">
+  </app-localstorage-document>
+
   <a href="blob:http://localhost:8081/911a7605-f77f-4ad3-ba11-aed108a10ff5">
   </video>
 </template>
@@ -24,12 +27,6 @@
         storageRef: Object,
         playlist: {
           type: Array,
-          value: [
-            {
-              name: 'My Playlist',
-              musics: [0]
-            }
-          ],
           notify: true
         },
         music: {
@@ -45,11 +42,13 @@
           type: Number,
           value: 0,
           computed: '_countMusic(music)',
+          notify: true
         },
         offlineNums: {
           type: Number,
           value: 0,
-          computed: '_countOfflineMusic(music)'
+          computed: '_countOfflineMusic(music)',
+          notify: true
         },
         isAuth: {
           type: Boolean,
@@ -72,10 +71,10 @@
       super.connectedCallback()
       this.storageRef = firebase.storage().ref()
       let self = this
-      this.isAuth = window.localStorage["is-auth"]
+      this.isAuth = window.localStorage["is-auth"] || false
+      this.playlist = window.localStorage['playlist'] ? JSON.parse(window.localStorage['playlist']) : []
 
       if(!this.isAuth || this.isAuth === 'false') {
-        setTimeout(() => { this.isAuth = false })
         let request = indexedDB.open('app-mirror')
         request.onsuccess = () => {
           let db = request.result
@@ -95,18 +94,40 @@
             return response.blob()
           }).then(myBlob => {
             let newMusic = {
+              key: snapshot.metadata.md5Hash,
               name: file.name,
               music_blob: myBlob
             }
-            if (this.music) this.music.push(newMusic)
+            if (this.music) {
+              this.push('music', newMusic)
+            }
             else this.music = [newMusic]
           })
         })
       }
     }
 
-    convertString (obj) {
-      return JSON.stringify(obj)
+    createNewplaylist (musicKey, playlist) {
+      this.push('playlist', {
+        name: playlist,
+        musics: []
+      })
+    }
+
+    addToPlaylist (musicKey, playlist) {
+      let choosePlaylist = this.playlist.findIndex(play => play.name === playlist)
+      if (this.playlist[choosePlaylist].musics.indexOf(musicKey) === -1) {
+        this.push(`playlist.${choosePlaylist}.musics`, musicKey)
+      }
+    }
+
+    removeFromPlaylist (musicKey, playlist) {
+      let choosePlaylist = this.playlist.findIndex(play => play.name === playlist)
+      let { musics } = this.playlist[choosePlaylist]
+      if (musics.indexOf(musicKey) > -1) {
+        this.splice(`playlist.${choosePlaylist}.musics`, musics.indexOf(musicKey), 1)
+      }
+      this.notifyPath(`playlist`)
     }
   }
   window.customElements.define(DMusicData.is, DMusicData)

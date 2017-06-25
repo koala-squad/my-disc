@@ -12,24 +12,51 @@
   <div>
     <d-music-data 
       id="musicdata"
-      music={{music}}
-      playlist={{playlist}}></d-music-data>
-    <template is="dom-repeat" items="{{music}}" index-as=index>
+      music-data="{{music}}"
+      music-nums="{{musicNums}}"
+      playlist="{{playlist}}"></d-music-data>
+  
+    <div>มีจำนวน [[ musicNums ]] เพลง</div>
+    <input type="file" on-change="uploadMusic">
+    <template is="dom-repeat" items="{{music}}" index-as="music_index">
       <div>
         [[ item.name ]]
         <video src="[[ convertToMusic(item.music_blob) ]]">URL</video>
+        <div>
+          Add To Playlist
+          <template is="dom-repeat" items={{playlist}} as="play">
+            <div>[[ play.name ]] 
+              <template is="dom-if" if="{{checkMusicInPlaylist(item.key, play)}}">
+                <button on-click="removeFromPlaylist" data-playlist$="{{ play.name }}" data-music-key$="{{ item.key }}">Added</button>
+              </template>
+              <template is="dom-if" if="{{!checkMusicInPlaylist(item.key, play)}}">
+                <button on-click="addToPlaylist" data-playlist$="{{ play.name }}" data-music-key$="{{ item.key }}">
+                  Add
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
       </div>
     </template>
-    <input type="file" on-change="uploadMusic">
+
+    <h3>Playlist</h3>
+    <template is="dom-repeat" items={{playlist}} index-as=index>
+      <div>[[ item.name ]]</div>
+      <div>
+        <template is="dom-repeat" items={{item.musics}} as="music_index">
+          [[ music_index ]]
+        </template>
+      </div>
+    </template>
+    
   </div>
 </template>
 <script>
   class DiscHome extends Polymer.Element {
     static get is () { return 'disc-home' }
     static get properties () {
-      return {
-        
-      }
+      return {}
     }
 
     uploadMusic (evt) {
@@ -40,6 +67,20 @@
       return URL.createObjectURL(blob)
     }
 
+    checkMusicInPlaylist (musicKey, playlist) {
+      let { musics } = playlist
+      return musics.indexOf(musicKey) > -1
+    }
+
+    addToPlaylist (evt) {
+      let { target } = evt
+      this.$.musicdata.addToPlaylist(target.getAttribute('data-music-key'), target.getAttribute('data-playlist'))
+    }
+
+    removeFromPlaylist (evt) {
+      let { target } = evt
+      this.$.musicdata.removeFromPlaylist(target.getAttribute('data-music-key'), target.getAttribute('data-playlist'))
+    }
   }
   window.customElements.define(DiscHome.is, DiscHome)
 </script>
