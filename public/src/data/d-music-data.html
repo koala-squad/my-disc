@@ -8,17 +8,10 @@
   <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError">
   </firebase-auth>
 
-  <firebase-document
-    id="document"
-    path="/users/{{user.uid}}"
-    data="{{musicServer}}">
+  <firebase-document id="document" path="/users/{{user.uid}}" data="{{musicServer}}">
   </firebase-document>
 
-  <app-indexeddb-mirror
-    key="music"
-    data="{{ music }}"
-    persisted-data="{{ musicData }}"
-  ></app-indexeddb-mirror>
+  <app-indexeddb-mirror key="music" data="{{ music }}" persisted-data="{{ musicData }}"></app-indexeddb-mirror>
 
   <app-localstorage-document key="is-auth" data="{{isAuth}}">
   </app-localstorage-document>
@@ -27,8 +20,8 @@
   </app-localstorage-document>
 
   <a href="blob:http://localhost:8081/911a7605-f77f-4ad3-ba11-aed108a10ff5">
-  </video>
-</template>
+  
+</a></template>
 <script>
   class DMusicData extends Polymer.Element {
     static get is () { return 'd-music-data' }
@@ -153,13 +146,13 @@
     }
 
     uploadMusic (evt) {
+      console.log(evt)
       let file = evt.file
       if (file.type === 'audio/mp3') {
         this.storageRef.child(`music/${evt.title}`).put(file).then((snapshot) => {
           fetch(snapshot.downloadURL).then(response => {
             return response.blob()
           }).then(myBlob => {
-            alert('Success')
             let newMusic = {
               key: snapshot.metadata.md5Hash,
               name: evt.title,
@@ -170,7 +163,6 @@
               this.push('music', newMusic)
             }
             else this.music = [newMusic]
-            this.musicNums += 1
           })
         })
       }

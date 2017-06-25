@@ -1,0 +1,80 @@
+<link rel="import" href="element-style.html">
+
+<dom-module id="element-menu">
+  <template>
+    <style include="element-style"></style>
+    <style>
+      :host {
+        position: relative;
+        display: inline-block;
+      }
+
+      .content {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 800;
+        min-width: 120px;
+        color: var(--color-primary);
+        background-color: var(--color-white);
+        transform: scale(0);
+        transform-origin: 95% 0;
+        transition: transform 0.2s ease-in-out;
+        overflow: hidden;
+        will-change: transform;
+      }
+
+      .content[visible] {
+        transform: scale(1);
+      }
+
+      .backdrop {
+        z-index: 799;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: none;
+        cursor: default;
+        pointer-events: none;
+      }
+
+      .backdrop[visible] {
+        display: block;
+        pointer-events: all;
+      }
+    </style>
+
+    <div on-click="toggle">
+      <slot name="toggle"></slot>
+      <div class="content" visible$="[[visible]]">
+        <slot></slot>
+      </div>
+      <div class="backdrop" visible$="[[visible]]"></div>
+    </div>
+  </template>
+
+  <script>
+    class ElementMenu extends Polymer.Element {
+
+      static get is() {
+        return 'element-menu';
+      }
+
+      static get properties() {
+        return {
+          visible: {
+            type: Boolean,
+            value: false
+          }
+        };
+      }
+
+      toggle() {
+        this.visible = !this.visible;
+      }
+    }
+    window.customElements.define(ElementMenu.is, ElementMenu);
+  </script>
+</dom-module>
