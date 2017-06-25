@@ -1,7 +1,10 @@
 {
-  "lint": {
-    "rules": [
-      "polymer-2"
-    ]
-  }
+  "entrypoint": "index.html",
+  "shell": "src/disc-app.html",
+  "sources": [
+    "src/**/*"
+  ],
+  "builds": [{
+    "addServiceWorker": true
+  }]
 }
