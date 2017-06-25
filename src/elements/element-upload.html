@@ -1,0 +1,86 @@
+<link rel='import' href='element-style.html'>
+
+<dom-module id='element-upload'>
+  <template>
+    <style include='element-style'></style>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .form {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 24px;
+      }
+
+      .upload {
+        position: absolute;
+        display: block;
+        padding: 8px;
+      }
+
+      .file {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        cursor: pointer;
+        opacity: 0;
+      }
+
+      .title {
+        flex-grow: 1;
+        min-width: 0;
+        padding-left: 48px;
+        border: none;
+        border-bottom: 2px solid var(--color-accent);
+        color: inherit;
+        background: none;
+        font-family: inherit;
+        font-size: 24px;
+        line-height: inherit;
+        outline: none;
+      }
+    </style>
+
+    <form class='form' on-submit='submit'>
+      <div class='upload'>
+        <div class='icon'>file_upload</div>
+        <input class='file' type='file' on-change='change'>
+      </div>
+      <input class='title' type='text' value='{{title::input}}'>
+    </form>
+  </template>
+
+  <script>
+    class ElementUpload extends Polymer.Element {
+
+      static get is() {
+        return 'element-upload';
+      }
+
+      static get properties() {
+        return {
+          title: String
+        };
+      }
+
+      change(event) {
+        this.file = event.target.files[0];
+        this.title = this.file.name;
+      }
+
+      submit(event) {
+        event.preventDefault();
+        this.dispatchEvent(new CustomEvent('submit', {
+          detail: { title: this.title, file: this.file }
+        }));
+      }
+    }
+    window.customElements.define(ElementUpload.is, ElementUpload);
+  </script>
+</dom-module>
