@@ -1,0 +1,46 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../data/d-music-data.html">
+
+<dom-module id="disc-home">
+<template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <div>
+    <d-music-data 
+      id="musicdata"
+      music={{music}}
+      playlist={{playlist}}></d-music-data>
+    <template is="dom-repeat" items="{{music}}" index-as=index>
+      <div>
+        [[ item.name ]]
+        <video src="[[ convertToMusic(item.music_blob) ]]">URL</video>
+      </div>
+    </template>
+    <input type="file" on-change="uploadMusic">
+  </div>
+</template>
+<script>
+  class DiscHome extends Polymer.Element {
+    static get is () { return 'disc-home' }
+    static get properties () {
+      return {
+        
+      }
+    }
+
+    uploadMusic (evt) {
+      this.$.musicdata.uploadMusic(evt)
+    }
+
+    convertToMusic (blob) {
+      return URL.createObjectURL(blob)
+    }
+
+  }
+  window.customElements.define(DiscHome.is, DiscHome)
+</script>
+</dom-module>

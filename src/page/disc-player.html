@@ -1,0 +1,21 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="disc-player">
+<template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+</template>
+<script>
+  class DiscPlayer extends Polymer.Element {
+    static get is () { return 'disc-player' }
+    static get properties () {
+      return {
+      }
+    }
+  }
+  window.customElements.define(DiscPlayer.is, DiscPlayer)
+</script>
+</dom-module>

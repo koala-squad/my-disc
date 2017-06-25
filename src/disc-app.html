@@ -1,0 +1,59 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+
+<link rel="import" href="page/disc-home.html">
+
+<dom-module id="disc-app">
+<template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <app-location route="{{route}}"></app-location>
+  <app-route
+      route="{{route}}"
+      pattern="/:page"
+      data="{{data}}">
+  </app-route>
+
+  <firebase-app
+    auth-domain="my-disc-2a0ac.firebaseapp.com"
+    database-url="https://my-disc-2a0ac.firebaseio.com"
+    api-key="AIzaSyA28XWr9dpcVpmI2_kH4WmPrdQODGaYgKo"
+    storage-bucket="my-disc-2a0ac.appspot.com"
+    messaging-sender-id="329216863306">
+  </firebase-app>
+
+  <iron-pages attr-for-selected="name" selected="[[page]]">
+    <disc-home name="home"></disc-home>
+  </iron-pages>
+</template>
+<script>
+  class DiscApp extends Polymer.Element {
+    static get is () { return 'disc-app' }
+    static get properties () {
+      return {
+        page: {
+          type: String,
+          value: 'home'
+        }
+      }
+    }
+
+    static get observers () {
+      return [
+        'changeRoute(data.page)'
+      ]
+    }
+
+    changeRoute (page) {
+      this.page = page || 'home'
+    }
+  }
+  window.customElements.define(DiscApp.is, DiscApp)
+</script>
+</dom-module>

@@ -1,0 +1,114 @@
+<link rel="import" href="../../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html">
+<link rel="import" href="../../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+
+<dom-module id="d-music-data">
+<template>
+  <app-indexeddb-mirror
+    key="music"
+    id="test_db"
+    data="{{ music }}"
+    persisted-data="{{ musicData }}"
+  ></app-indexeddb-mirror>
+
+  <app-localstorage-document key="is-auth" data="{{isAuth}}">
+  </app-localstorage-document>
+
+  <a href="blob:http://localhost:8081/911a7605-f77f-4ad3-ba11-aed108a10ff5">
+  </video>
+</template>
+<script>
+  class DMusicData extends Polymer.Element {
+    static get is () { return 'd-music-data' }
+    static get properties () {
+      return {
+        storageRef: Object,
+        playlist: {
+          type: Array,
+          value: [
+            {
+              name: 'My Playlist',
+              musics: [0]
+            }
+          ],
+          notify: true
+        },
+        music: {
+          type: Array,
+          value: [],
+          notify: true
+        },
+        musicData: {
+          type: Array, 
+          notify: true
+        },
+        musicNums: {
+          type: Number,
+          value: 0,
+          computed: '_countMusic(music)',
+        },
+        offlineNums: {
+          type: Number,
+          value: 0,
+          computed: '_countOfflineMusic(music)'
+        },
+        isAuth: {
+          type: Boolean,
+          notify: true
+        }
+      }
+    }
+
+    _countMusic (music) {
+      if (music && music.length) return music.length
+      else return 0
+    }
+
+    _countOfflineMusic (music) {
+      if (music && music.length) return music.filter((m) => m.offline).length
+      else return 0
+    }
+
+    connectedCallback () {
+      super.connectedCallback()
+      this.storageRef = firebase.storage().ref()
+      let self = this
+      this.isAuth = window.localStorage["is-auth"]
+
+      if(!this.isAuth || this.isAuth === 'false') {
+        setTimeout(() => { this.isAuth = false })
+        let request = indexedDB.open('app-mirror')
+        request.onsuccess = () => {
+          let db = request.result
+          let musicKeyDB = db.transaction(["mirrored_data"]).objectStore("mirrored_data").get("music")
+          musicKeyDB.onsuccess = (evt) => {
+            self.music = evt.target.result
+          }
+        }
+      }
+    }
+
+    uploadMusic (evt) {
+      let file = evt.target.files[0]
+      if (file.type === 'audio/mp3') {
+        this.storageRef.child(`music/${file.name}`).put(file).then((snapshot) => {
+          fetch(snapshot.downloadURL).then(response => {
+            return response.blob()
+          }).then(myBlob => {
+            let newMusic = {
+              name: file.name,
+              music_blob: myBlob
+            }
+            if (this.music) this.music.push(newMusic)
+            else this.music = [newMusic]
+          })
+        })
+      }
+    }
+
+    convertString (obj) {
+      return JSON.stringify(obj)
+    }
+  }
+  window.customElements.define(DMusicData.is, DMusicData)
+</script>
+</dom-module>
