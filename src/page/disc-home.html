@@ -14,8 +14,15 @@
     :host {
       display: block;
     }
-    a {
+    
+    .playlist {
+      display: block;
+      border-top: 2px solid var(--color-dark-primary);
       color: inherit;
+    }
+
+    .playlist:first-of-type {
+      border-top: none;
     }
   </style>
   <div>
@@ -29,7 +36,7 @@
       music-nums="{{musicNums}}"
       playlist="{{playlist}}"></d-music-data>
 
-    <a href="/all">
+    <a class='playlist' href="/all">
       <element-playlist
       title="เพลงทั้งหมด"
       count="[[ musicNums ]]">
@@ -41,7 +48,7 @@
     </a>
 
     <template is="dom-repeat" items="{{playlist}}">
-      <a href="/[[item.name]]">
+      <a class='playlist' href="/[[item.name]]">
         <element-playlist
         title="[[ item.name ]]"
         count="[[ musicNums ]]">
